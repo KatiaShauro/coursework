@@ -1,0 +1,90 @@
+#include "gameboard.h"
+#include "ui_gameboard.h"
+#include <QGraphicsSceneMouseEvent>
+#include <QDebug>
+#include <QTimer>
+#include <cstdlib>
+
+GameBoard::GameBoard(QObject *parent) :
+    QGraphicsScene(parent),
+    ts(54),
+    click(0),
+    isSwap(false),
+    isMoving(false),
+    isInitialized(false)
+{
+    initializeGrid();
+}
+GameBoard::~GameBoard()
+{
+    delete ui;
+}
+
+void GameBoard::initializeGrid() {
+    srand(time(0));
+
+    for (int i = 1; i <= 8; i++) {
+        for (int j = 1; j <= 8; j++) {
+            grid[i][j].kind = rand() % 3;
+            grid[i][j].col = j;
+            grid[i][j].row = i;
+            grid[i][j].x = j * ts;
+            grid[i][j].y = i * ts;
+        }
+    }
+}
+
+void GameBoard::mousePressEvent(QGraphicsSceneMouseEvent *event) {
+    if (!isSwap && !isMoving)
+        click++;
+    QPointF pos = event->scenePos() - QPointF(48, 24);
+    int posX = pos.x() / ts + 1;
+    int posY = pos.y() / ts + 1;
+
+    if (click == 1) {
+        x0 = posX;
+        y0 = posY;
+    } else if (click == 2) {
+        x = posX;
+        y = posY;
+        if (abs(x - x0) + abs(y - y0) == 1) {
+            swap(grid[y0][x0], grid[y][x]);
+            isSwap = true;
+            click = 0;
+        } else {
+            click = 1;
+        }
+    }
+}
+
+void GameBoard::swap(piece &p1, piece &p2) {
+    std::swap(p1.col, p2.col);
+    std::swap(p1.row, p2.row);
+
+    grid[p1.row][p1.col] = p1;
+    grid[p2.row][p2.col] = p2;
+}
+
+void GameBoard::checkMatches() {
+    // Определение совпадений
+    // ваш код здесь
+}
+
+void GameBoard::movePieces() {
+    // Анимация перемещения фишек
+    // ваш код здесь
+}
+
+void GameBoard::deleteAnimation() {
+    // Анимация удаления совпавших фишек
+    // ваш код здесь
+}
+
+void GameBoard::updateGrid() {
+    // Обновление игрового поля
+    // ваш код здесь
+}
+
+void GameBoard::on_pushButton_clicked() {
+    // Обработчик нажатия на кнопку
+}
