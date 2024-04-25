@@ -1,7 +1,0 @@
-<RCC>
-    <qresource prefix="/">
-        <file>images/gems.png</file>
-        <file>images/cursor.png</file>
-        <file>images/background.png</file>
-    </qresource>
-</RCC>
