@@ -4,12 +4,11 @@
 #include <QGraphicsScene>
 #include <QGraphicsSceneMouseEvent>
 #include <QObject>
-#include <QParallelAnimationGroup>
 #include <QString>
 #include <QTransform>
 #include <QDebug>
-#include <QMessageBox>
 #include <QtMath>
+#include <QGraphicsTextItem>
 #include "const.h"
 #include "gemsitem.h"
 
@@ -18,19 +17,19 @@ class Scene : public QGraphicsScene {
  public:
   explicit Scene(QObject* parent = nullptr);
   void addGems();
-  bool isBackground;
   void setIsBackground(bool value);
+  void addScore();
 
 private:
-  bool gameOn;
   int score;
-  int bestScore;
+  bool isBackground;
 
   GemsItem* m_selectedGem;
   GemsItem* gem;
 
   QPointF startPosition;
   GemsItem*** arrOfGems;
+  QGraphicsTextItem *scoreText;
 
   void deleteMatches(GemsItem* gem);
   void swapGems(GemsItem* gem1, GemsItem* gem2);

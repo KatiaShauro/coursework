@@ -11,8 +11,6 @@ class GemsItem : public QWidget, public QGraphicsPixmapItem {
   Q_OBJECT
  public:
   explicit GemsItem();
-  int getColor();
-
 
   enum GemType {
     SquarePurple,

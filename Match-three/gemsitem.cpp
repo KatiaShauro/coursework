@@ -6,13 +6,9 @@ GemsItem::GemsItem() : isBackground(false) {
   int gemHeight = pixmap.height();
 
   // Обрезка изображения для выбранного типа гема
-  type = QRandomGenerator::global()->bounded(7);
+  type = QRandomGenerator::global()->bounded(ROW_COUNT - 1);
   QPixmap gemPixmap = pixmap.copy(gemWidth * type, 0, gemWidth, gemHeight);
-  setPixmap(gemPixmap.scaled(QSize(75, 75), Qt::KeepAspectRatio));
-}
-
-int GemsItem::getColor() {
-  return type;
+  setPixmap(gemPixmap.scaled(QSize(SIZE, SIZE), Qt::KeepAspectRatio));
 }
 
 int GemsItem::getpRow() const

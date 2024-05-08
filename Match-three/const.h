@@ -8,5 +8,7 @@ static const int LAST_COL = 7;
 static const int LAST_ROW = 7;
 static const int START_POS_X = -643;
 static const int START_POS_Y = -425;
-
+static const int LENGTH = 1500;
+static const int WIDTH = 1000;
+static const int SIZE = 75;
 #endif  // CONST_H

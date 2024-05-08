@@ -3,7 +3,7 @@
 
 Widget::Widget(QWidget* parent) : QWidget(parent), ui(new Ui::Widget) {
   ui->setupUi(this);
-  setFixedSize(1500, 1000);
+  setFixedSize(LENGTH, WIDTH);
 
   scene = new Scene;
   scene->setIsBackground(true);
@@ -11,14 +11,16 @@ Widget::Widget(QWidget* parent) : QWidget(parent), ui(new Ui::Widget) {
 
   QGraphicsPixmapItem* pixItem = new QGraphicsPixmapItem(
       QPixmap(":/images/background.png")
-          .scaled(QSize(1500, 1000), Qt::KeepAspectRatio));
+          .scaled(QSize(LENGTH, WIDTH), Qt::KeepAspectRatio));
   scene->addItem(pixItem);
   pixItem->setPos(QPointF(0, 0) -
                   QPointF(pixItem->boundingRect().width() / 2,
                           pixItem->boundingRect().height() / 2));
 
   ui->graphicsView->setScene(scene);
+  scene->addScore();
   scene->addGems();
+
 
 }
 

@@ -2,9 +2,7 @@
 
 Scene::Scene(QObject* parent)
     : QGraphicsScene(parent),
-      gameOn(false),
       score(0),
-      bestScore(0),
       startPosition(QPointF(START_POS_X, START_POS_Y)),
       m_selectedGem(nullptr) {}
 
@@ -30,31 +28,91 @@ void Scene::addGems() {
   }
   checkHorMatches();
   checkVertMatches();
+  dropGems();
+
+  score = 0;
+  scoreText->setPlainText("Score:" + QString::number(score));
 }
 
 void Scene::setIsBackground(bool value) {
   isBackground = value;
 }
 
+void Scene::addScore() {
+  QString htmlString = "<p> Score: " + QString::number(score) + "</p>";
+
+  scoreText = new QGraphicsTextItem();
+  QFont mFont("Consolas", 35, QFont::Bold);
+  scoreText->setHtml(htmlString);
+  scoreText->setFont(mFont);
+  scoreText->setDefaultTextColor(Qt::blue);
+  addItem(scoreText);
+
+  scoreText->setPos(QPointF(300, 350));
+}
+
 void Scene::dropGems() {
-  for (int col = 0; col < COL_COUNT; ++col) {
-    for (int row = 0; row < 1; ++row) {
+  for (int row = ROW_COUNT - 1; row >= 0; --row) {
+    for (int col = COL_COUNT - 1; col >= 0; --col) {
+      GemsItem* curGem = arrOfGems[row][col];
 
-      GemsItem* gem = arrOfGems[row][col];
-      QPointF pos = gem->scenePos();
+      if (curGem->getType() != -1) {
+        continue;
+      } else {
 
-      if (gem->getType() == -1) {
         if (row == 0) {
+          curGem = new GemsItem();
+          QPointF pos = startPosition + QPointF(col * (GEM_SIZE + SPACING),
+                                                row * (GEM_SIZE + SPACING));
+          curGem->setPos(pos);
+          addItem(curGem);
+          curGem->setpCol(col);
+          curGem->setpRow(row);
+          arrOfGems[row][col] = curGem;
 
-          gem = new GemsItem();
-          gem->setPos(pos);
-          addItem(gem);
-          arrOfGems[row][col] = gem;
-          continue;
+        } else {
+          GemsItem* upGem = arrOfGems[row - 1][col];
+          int dur = 1;
+
+          while (upGem->getType() == -1 && row - 1 - dur >= 0) {
+            upGem = arrOfGems[row - 1 - dur][col];
+            ++dur;
+          }
+
+          if (upGem->getType() == -1) {
+            curGem = new GemsItem();
+            QPointF pos = startPosition + QPointF(col * (GEM_SIZE + SPACING),
+                                                  row * (GEM_SIZE + SPACING));
+            curGem->setPos(pos);
+            addItem(curGem);
+            curGem->setpCol(col);
+            curGem->setpRow(row);
+            arrOfGems[row][col] = curGem;
+          }
+
+          else {
+            upGem = arrOfGems[row - dur][col];
+            QPointF pos1 = curGem->scenePos();
+            QPointF pos2 = upGem->scenePos();
+
+            curGem->setPos(pos2);
+            upGem->setPos(pos1);
+
+            std::swap(arrOfGems[row][col], arrOfGems[row - dur][col]);
+
+            int tempRow = curGem->getpRow();
+            int tempCol = curGem->getpCol();
+            curGem->setpRow(upGem->getpRow());
+            curGem->setpCol(upGem->getpCol());
+            upGem->setpRow(tempRow);
+            upGem->setpCol(tempCol);
+          }
         }
       }
     }
   }
+  checkHorMatches();
+  checkVertMatches();
 }
 
 void Scene::deleteMatches(GemsItem* gem) {
@@ -73,135 +131,115 @@ void Scene::deleteMatches(GemsItem* gem) {
 }
 
 void Scene::swapGems(GemsItem* gem1, GemsItem* gem2) {
-    if (!gem1 || !gem2) {
-        return;
-    }
+  if (!gem1 || !gem2) {
+    return;
+  }
 
-    QPointF pos1 = gem1->scenePos();
-    QPointF pos2 = gem2->scenePos();
+  QPointF pos1 = gem1->scenePos();
+  QPointF pos2 = gem2->scenePos();
 
-    bool areAdjacent = (((qAbs(pos1.x() - pos2.x()) < GEM_SIZE * 2 + SPACING) &&
-                         (qAbs(pos1.y() - pos2.y()) < GEM_SIZE * 2 + SPACING)) ||
+  bool areAdjacent = (((qAbs(pos1.x() - pos2.x()) < GEM_SIZE * 2 + SPACING) &&
+                       (qAbs(pos1.y() - pos2.y()) < GEM_SIZE * 2 + SPACING)) ||
 
-                        ((qAbs(pos1.y() - pos2.y()) < GEM_SIZE + SPACING) &&
-                         (qAbs(pos1.x() - pos2.x()) < GEM_SIZE + SPACING)));
+                      ((qAbs(pos1.y() - pos2.y()) < GEM_SIZE + SPACING) &&
+                       (qAbs(pos1.x() - pos2.x()) < GEM_SIZE + SPACING)));
 
-    if (!areAdjacent) {
-        return;
+  if (!areAdjacent) {
+    return;
+  } else {
+    // Поменять местами гемы на сцене
+    gem1->setPos(pos2);
+    gem2->setPos(pos1);
+
+    // Проверяем, чтобы индексы не выходили за границы массива
+    int row1 = gem1->getpRow();
+    int col1 = gem1->getpCol();
+    int row2 = gem2->getpRow();
+    int col2 = gem2->getpCol();
+
+    if (row1 >= 0 && row1 < ROW_COUNT && col1 >= 0 && col1 < COL_COUNT &&
+        row2 >= 0 && row2 < ROW_COUNT && col2 >= 0 && col2 < COL_COUNT) {
+
+      std::swap(arrOfGems[row1][col1], arrOfGems[row2][col2]);
+
     } else {
-        // Поменять местами гемы на сцене
-        gem1->setPos(pos2);
-        gem2->setPos(pos1);
-
-        qDebug() << "!!!!!types before: 1)" << gem1->getType() << "2)"
-                 << gem2->getType();
-        // Обновить содержимое массива arrOfGems
-        qDebug() << "types before: 1)"
-                 << arrOfGems[gem1->getpRow()][gem1->getpCol()]->getType() << "2)"
-                 << arrOfGems[gem2->getpRow()][gem2->getpCol()]->getType();
-
-        // Проверяем, чтобы индексы не выходили за границы массива
-        int row1 = gem1->getpRow();
-        int col1 = gem1->getpCol();
-        int row2 = gem2->getpRow();
-        int col2 = gem2->getpCol();
-
-        if (row1 >= 0 && row1 < ROW_COUNT && col1 >= 0 && col1 < COL_COUNT &&
-            row2 >= 0 && row2 < ROW_COUNT && col2 >= 0 && col2 < COL_COUNT) {
-
-            std::swap(arrOfGems[row1][col1], arrOfGems[row2][col2]);
-
-            qDebug() << "types after: 1)"
-                     << arrOfGems[gem1->getpRow()][gem1->getpCol()]->getType() << "2)"
-                     << arrOfGems[gem2->getpRow()][gem2->getpCol()]->getType();
-        } else {
-            qDebug() << "Index out of bounds!";
-        }
-
-        // Обновить указатели pRow и pCol у гемов
-        int tempRow = gem1->getpRow();
-        int tempCol = gem1->getpCol();
-        gem1->setpRow(gem2->getpRow());
-        gem1->setpCol(gem2->getpCol());
-        gem2->setpRow(tempRow);
-        gem2->setpCol(tempCol);
-
-        checkHorMatches();
-        checkVertMatches();
+      qDebug() << "Index out of bounds!";
     }
+
+    // Обновить указатели pRow и pCol у гемов
+    int tempRow = gem1->getpRow();
+    int tempCol = gem1->getpCol();
+    gem1->setpRow(gem2->getpRow());
+    gem1->setpCol(gem2->getpCol());
+    gem2->setpRow(tempRow);
+    gem2->setpCol(tempCol);
+
+    checkHorMatches();
+    checkVertMatches();
+    dropGems();
+  }
 }
 
-
 void Scene::checkHorMatches() {
-
-  int count = 1;
-
   for (int row = 0; row < ROW_COUNT; ++row) {
+    int count = 1;
     for (int col = 0; col < COL_COUNT - 1; ++col) {
+
       GemsItem* currentGem = arrOfGems[row][col];
       GemsItem* nextGem = arrOfGems[row][col + 1];
-      qDebug() << "row " << row << "col " << col << "count" << count
-               << "gemtype" << arrOfGems[row][col]->getType();
-      if (count == 3) {
-        for (int i = 0; i < 3 ; ++i) {
-          qDebug() << "H:delete at row " << row << "col " << col - i;
-          deleteMatches(arrOfGems[row][col - i]);
-        }
-       dropGems();
-        count = 1;
-      }
-      if (!nextGem || nextGem->getType() != currentGem->getType() ||
-          currentGem->getType() == -1 || nextGem->getType() == -1) {
-        count = 1;
-        continue;
-      } else {
+
+      if (currentGem->getType() != -1 &&
+          nextGem->getType() == currentGem->getType()) {
         ++count;
+      } else {
+        if (count >= 3) {
+          ++score;
+          for (int i = 0; i < count; ++i) {
+            deleteMatches(arrOfGems[row][col - i]);
+          }
+          dropGems();
+        }
+        count = 1;
       }
     }
-    if (count == 3) {
-      for (int i = 0; i < 3; ++i) {
-        qDebug() << "H:delete at row " << row << "col " << LAST_COL - i;
+    if (count >= 3) {
+      ++score;
+      for (int i = 0; i < count; ++i) {
         deleteMatches(arrOfGems[row][LAST_COL - i]);
       }
-    dropGems();
+      dropGems();
     }
-    count = 1;
-    qDebug() << "\n";
   }
 }
 
 void Scene::checkVertMatches() {
-
-  int count = 1;
-
   for (int col = 0; col < COL_COUNT; ++col) {
+    int count = 1;
     for (int row = 0; row < ROW_COUNT - 1; ++row) {
+
       GemsItem* currentGem = arrOfGems[row][col];
       GemsItem* nextGem = arrOfGems[row + 1][col];
 
-      if (count == 3) {
-        for (int i = 0; i < 3; ++i) {
-          qDebug() << "V:delete at row " << row - i << "col " << col;
-          deleteMatches(arrOfGems[row - i][col]);
-        }
-       dropGems();
-        count = 1;
-      }
-      if (!nextGem || nextGem->getType() != currentGem->getType() ||
-          currentGem->getType() == -1 || nextGem->getType() == -1) {
-        count = 1;
-        continue;
-      } else {
+      if (currentGem->getType() != -1 &&
+          nextGem->getType() == currentGem->getType()) {
         ++count;
+      } else {
+        if (count >= 3) {
+          ++score;
+          for (int i = 0; i < count; ++i) {
+            deleteMatches(arrOfGems[row - i][col]);
+          }
+          dropGems();
+        }
+        count = 1;
       }
     }
-    if (count == 3) {
-      for (int i = 0; i < 3; ++i) {
-        qDebug() << "V:delete at row " << LAST_ROW - i << "col " << col;
+    if (count >= 3) {
+      ++score;
+      for (int i = 0; i < count; ++i) {
         deleteMatches(arrOfGems[LAST_ROW - i][col]);
       }
-       dropGems();
-      count = 1;
+      dropGems();
     }
   }
 }
@@ -216,7 +254,10 @@ void Scene::mousePressEvent(QGraphicsSceneMouseEvent* event) {
     if (!m_selectedGem) {
       m_selectedGem = gem;
     } else {
+      checkHorMatches();
+      checkVertMatches();
       swapGems(m_selectedGem, gem);
+      scoreText->setPlainText("Score:" + QString::number(score));
       m_selectedGem = nullptr;
     }
   }

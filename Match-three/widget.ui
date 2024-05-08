@@ -17,13 +17,6 @@
    <item>
     <widget class="QGraphicsView" name="graphicsView"/>
    </item>
-   <item>
-    <widget class="QPushButton" name="startButton">
-     <property name="text">
-      <string>START!!</string>
-     </property>
-    </widget>
-   </item>
   </layout>
  </widget>
  <resources/>
