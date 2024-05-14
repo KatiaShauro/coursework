@@ -1,0 +1,9 @@
+<RCC>
+    <qresource prefix="/">
+        <file>Images/background.jpeg</file>
+        <file>Images/apple.png</file>
+        <file>Images/skin.png</file>
+        <file>Images/head.png</file>
+        <file>Images/gameover.png</file>
+    </qresource>
+</RCC>
